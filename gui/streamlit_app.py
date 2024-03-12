@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import matplotlib.pyplot as plt
 import torch
@@ -12,11 +13,10 @@ from app_configs import (
     name_map,
     default_params,
 )
+from time import sleep
 
 
-def caustic_critical_line(
-    lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"
-):
+def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"):
     thx, thy = get_meshgrid(
         res / upsample_factor,
         upsample_factor * simulation_size,
@@ -60,16 +60,16 @@ css = """
 </style>
 """
 st.markdown(css, unsafe_allow_html=True)
-logo_url = "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo_white.png?raw=true"
+logo_url = (
+    "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo_white.png?raw=true"
+)
 st.sidebar.image(logo_url)
 docs_url = "https://caustics.readthedocs.io/"
 st.sidebar.write("Check out the [documentation](%s)!" % docs_url)
 lens_menu = st.sidebar.multiselect(
     "Select your Lens(es)", lens_slider_configs.keys(), default=["EPL", "Shear"]
 )
-source_menu = st.sidebar.radio(
-    "Select your Source (more to come)", source_slider_configs.keys()
-)
+source_menu = st.sidebar.radio("Select your Source (more to come)", source_slider_configs.keys())
 st.sidebar.write(
     "Note: if you see an error about contour plots, just reload the webpage and it will go away."
 )
@@ -90,9 +90,7 @@ with col1:
     for lens in lens_menu:
         for param, label, bounds in lens_slider_configs[lens]:
             x_lens.append(
-                st.slider(
-                    label, min_value=bounds[0], max_value=bounds[1], value=bounds[2]
-                )
+                st.slider(label, min_value=bounds[0], max_value=bounds[1], value=bounds[2])
             )
 
     x_lens = torch.tensor(x_lens)
@@ -104,6 +102,9 @@ with col2:
         source_file = st.file_uploader(
             "Upload a source image", type=["png", "jpg"], accept_multiple_files=False
         )
+        if source_file is None:
+            selfloc = os.path.dirname(os.path.abspath(__file__))
+            source_file = os.path.join(selfloc, "logo.png")
         img = plt.imread(source_file)
         source_shape = img.shape[:-1][::-1]
         source_img = torch.tensor(img).permute(2, 0, 1).float()
@@ -116,9 +117,7 @@ with col2:
         x_source = []
         for param, label, bounds in source_slider_configs[source_menu]:
             x_source.append(
-                st.slider(
-                    label, min_value=bounds[0], max_value=bounds[1], value=bounds[2]
-                )
+                st.slider(label, min_value=bounds[0], max_value=bounds[1], value=bounds[2])
             )
         x_source = torch.tensor(x_source)
 x_all = torch.cat((x_lens, x_source))
@@ -158,6 +157,7 @@ else:
         lens=lens, x=x_lens, z_s=z_source, res=deltam, simulation_size=simulation_size
     )
 
+
 # Plot the caustic trace and lensed image in the second column
 with col3:
     st.header(r"$\textsf{\tiny Visualization}$", divider="blue")
@@ -168,10 +168,7 @@ with col3:
     if source_menu == "Pixelated":
         ax2.imshow(
             np.stack(
-                list(
-                    subsim(x_all, lens_source=False).detach().numpy()
-                    for subsim in minisim
-                ),
+                list(subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim),
                 axis=2,
             ),
         )
@@ -211,10 +208,7 @@ with col3:
     if source_menu == "Pixelated":
         ax1.imshow(
             np.stack(
-                list(
-                    subsim(x_all, lens_source=True).detach().numpy()
-                    for subsim in minisim
-                ),
+                list(subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim),
                 axis=2,
             ),
         )
