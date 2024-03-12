@@ -73,7 +73,7 @@ source_slider_configs = {
         ["y0", "Sersic Y Position", [-2.0, 2.0, -0.2 + 0.25]],
         ["q", "Sersic Axis Ratio", [0.1, 1.0, 0.5]],
         ["phi", "Sersic Rotation Angle", [0.0, 3.14, 0.0]],
-        ["n", "Sersic Index", [0.1, 10.0, 2.0]],
+        ["n", "Sersic Index", [0.1, 10.0, 0.8]],
         ["Re", "Sersic Scale Length", [0.0, 2.0, 1.25]],
     ],
     "Pixelated": [

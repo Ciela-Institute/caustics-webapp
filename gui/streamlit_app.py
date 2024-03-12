@@ -132,7 +132,6 @@ with col3:
         )
     else:
         res = minisim(x_all, lens_source=False).numpy()
-        res = np.log10(res)
         res = (res - np.min(res)) / (np.max(res) - np.min(res))
         st.image(
             inferno(res),
@@ -153,7 +152,6 @@ with col3:
         )
     else:
         res = minisim(x_all, lens_source=True).numpy()
-        res = np.log10(res)
         res = (res - np.min(res)) / (np.max(res) - np.min(res))
         st.image(
             inferno(res),
