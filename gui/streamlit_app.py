@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from streamlit_theme import st_theme
 import matplotlib.pyplot as plt
 from matplotlib.cm import inferno
 import torch
@@ -59,7 +60,14 @@ css = """
 </style>
 """
 st.markdown(css, unsafe_allow_html=True)
-logo_url = (
+
+theme = st_theme()
+if theme["base"] == "dark":
+    logo_url = (
+    "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo.png?raw=true"
+    )
+else:
+    logo_url = (
     "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo_white.png?raw=true"
 )
 st.sidebar.image(logo_url)
