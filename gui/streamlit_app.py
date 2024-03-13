@@ -168,98 +168,142 @@ else:
 # Plot the caustic trace and lensed image in the second column
 with col3:
     st.header(r"$\textsf{\tiny Visualization}$", divider="blue")
-
-    # Plot the unlensed image
-    fig2, ax2 = plt.subplots(figsize=(7, 7))
-    ax2.set_title("Unlensed source and caustic", fontsize=15)
-    if source_menu == "Pixelated":
-        ax2.imshow(
-            np.stack(
-                list(
-                    subsim(x_all, lens_source=False).detach().numpy()
-                    for subsim in minisim
-                ),
-                axis=2,
-            ),
-        )
-        if caustic_trace:
-            for c in range(len(y1s)):
-                ax2.plot(y1s[c], y2s[c], "-w")
-    else:
-        ax2.imshow(
-            minisim(x_all, lens_source=False),
-            origin="lower",
-            cmap="inferno",
-        )
-        if caustic_trace:
-            for c in range(len(y1s)):
-                ax2.plot(y1s[c], y2s[c], "-w")
-    ax2.set_xticks(
-        ticks=np.linspace(0, simulation_size, 5).astype(int),
-        labels=np.round(
-            np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-            3,
-        ),
-        fontsize=15,
-    )
-    ax2.set_xlabel("Arcseconds from center", fontsize=15)
-    ax2.yaxis.set_label_position("right")
-    ax2.yaxis.tick_right()
-    ax2.set_yticks(
-        ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
-        labels=np.round(
-            np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-            3,
-        )[1:],
-        fontsize=15,
-        rotation=90,
-    )
-    ax2.set_ylabel("Arcseconds from center", fontsize=15)
-    st.pyplot(fig2)
     
-    fig1, ax1 = plt.subplots(figsize=(7, 7))
-    ax1.set_title("Lens and critical curve", fontsize=15)
-    if source_menu == "Pixelated":
-        ax1.imshow(
-            np.stack(
-                list(
-                    subsim(x_all, lens_source=True).detach().numpy()
-                    for subsim in minisim
+    if caustic_trace:
+        # Plot the unlensed image
+        fig2, ax2 = plt.subplots(figsize=(7, 7))
+        ax2.set_title("Unlensed source and caustic", fontsize=15)
+        if source_menu == "Pixelated":
+            ax2.imshow(
+                np.stack(
+                    list(
+                        subsim(x_all, lens_source=False).detach().numpy()
+                        for subsim in minisim
+                    ),
+                    axis=2,
                 ),
-                axis=2,
+            )
+            if caustic_trace:
+                for c in range(len(y1s)):
+                    ax2.plot(y1s[c], y2s[c], "-w")
+        else:
+            ax2.imshow(
+                minisim(x_all, lens_source=False),
+                origin="lower",
+                cmap="inferno",
+            )
+            if caustic_trace:
+                for c in range(len(y1s)):
+                    ax2.plot(y1s[c], y2s[c], "-w")
+        ax2.set_xticks(
+            ticks=np.linspace(0, simulation_size, 5).astype(int),
+            labels=np.round(
+                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
+                3,
             ),
+            fontsize=15,
         )
-        if critical_curve_trace:
-            for c in range(len(x1s)):
-                ax1.plot(x1s[c], x2s[c], "-w")
+        ax2.set_xlabel("Arcseconds from center", fontsize=15)
+        ax2.yaxis.set_label_position("right")
+        ax2.yaxis.tick_right()
+        ax2.set_yticks(
+            ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
+            labels=np.round(
+                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
+                3,
+            )[1:],
+            fontsize=15,
+            rotation=90,
+        )
+        ax2.set_ylabel("Arcseconds from center", fontsize=15)
+        st.pyplot(fig2)
     else:
-        ax1.imshow(
-            minisim(x_all, lens_source=True),
-            origin="lower",
-            cmap="inferno",
+        # Plot the unlensed image
+        if source_menu == "Pixelated":
+            st.image(
+                np.stack(
+                    list(subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim),
+                    axis=2,
+                ),
+                caption="Unlensed image",
+                use_column_width="always",
+                clamp=True,
+            )
+        else:
+            res = minisim(x_all, lens_source=False).numpy()
+            res = (res - np.min(res)) / (np.max(res) - np.min(res))
+            st.image(
+                inferno(res),
+                caption="Unlensed image",
+                use_column_width="always",
+                clamp=True,
+            )
+    
+    if critical_curve_trace:
+        fig1, ax1 = plt.subplots(figsize=(7, 7))
+        ax1.set_title("Lens and critical curve", fontsize=15)
+        if source_menu == "Pixelated":
+            ax1.imshow(
+                np.stack(
+                    list(
+                        subsim(x_all, lens_source=True).detach().numpy()
+                        for subsim in minisim
+                    ),
+                    axis=2,
+                ),
+            )
+            if critical_curve_trace:
+                for c in range(len(x1s)):
+                    ax1.plot(x1s[c], x2s[c], "-w")
+        else:
+            ax1.imshow(
+                minisim(x_all, lens_source=True),
+                origin="lower",
+                cmap="inferno",
+            )
+            if critical_curve_trace:
+                for c in range(len(x1s)):
+                    ax1.plot(x1s[c], x2s[c], "-w")
+        ax1.set_xticks(
+            ticks=np.linspace(0, simulation_size, 5).astype(int),
+            labels=np.round(
+                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
+                3,
+            ),
+            fontsize=15,
         )
-        if critical_curve_trace:
-            for c in range(len(x1s)):
-                ax1.plot(x1s[c], x2s[c], "-w")
-    ax1.set_xticks(
-        ticks=np.linspace(0, simulation_size, 5).astype(int),
-        labels=np.round(
-            np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-            3,
-        ),
-        fontsize=15,
-    )
-    ax1.set_xlabel("Arcseconds from center", fontsize=15)
-    ax1.yaxis.set_label_position("right")
-    ax1.yaxis.tick_right()
-    ax1.set_yticks(
-        ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
-        labels=np.round(
-            np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-            3,
-        )[1:],
-        fontsize=15,
-        rotation=90,
-    )
-    ax1.set_ylabel("Arcseconds from center", fontsize=15)
-    st.pyplot(fig1)
+        ax1.set_xlabel("Arcseconds from center", fontsize=15)
+        ax1.yaxis.set_label_position("right")
+        ax1.yaxis.tick_right()
+        ax1.set_yticks(
+            ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
+            labels=np.round(
+                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
+                3,
+            )[1:],
+            fontsize=15,
+            rotation=90,
+        )
+        ax1.set_ylabel("Arcseconds from center", fontsize=15)
+        st.pyplot(fig1)
+        
+    else:
+        if source_menu == "Pixelated":
+            st.image(
+                np.stack(
+                    list(subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim),
+                    axis=2,
+                ),
+                caption="Lensed image",
+                use_column_width="always",
+                clamp=True,
+            )
+        else:
+            res = minisim(x_all, lens_source=True).numpy()
+            res = (res - np.min(res)) / (np.max(res) - np.min(res))
+            st.image(
+                inferno(res),
+                caption="Lensed image",
+                use_column_width="always",
+                clamp=True,
+            )
