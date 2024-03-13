@@ -35,7 +35,7 @@ st.sidebar.write("Get it for yourself: pip install caustics")
 st.title("Caustics Gravitational Lensing Simulator")
 st.header(f"{'+'.join(lens_menu)} and {source_menu} Source")
 simulation_size = st.number_input(
-    "Simulation resolution", min_value=32, value=500 if source_menu == "Pixelated" else 64
+    "Simulation resolution", min_value=32, value=256 if source_menu == "Pixelated" else 64
 )
 fov = 6.5
 deltam = fov / simulation_size
@@ -72,7 +72,7 @@ with col2:
             source_img /= 255.0
         x_source = torch.tensor([])
         src_pixelscale = fov / (max(source_shape))
-        fov_scale = st.slider("FOV scale", min_value=0.1, max_value=2.0, value=1.0)
+        fov_scale = st.slider("FOV scale", min_value=0.1, max_value=2.0, value=0.6)
     else:
         x_source = []
         for param, label, bounds in source_slider_configs[source_menu]:

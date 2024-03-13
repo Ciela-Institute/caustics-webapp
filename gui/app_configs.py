@@ -7,7 +7,7 @@ lens_slider_configs = {
         ["y0", "EPL Y Position", [-2.0, 2.0, 0.25]],
         ["q", "EPL Axis Ratio", [0.1, 1.0, 0.82]],
         ["phi", "EPL Rotation Angle", [0.0, 3.14, 8 * (3.14 / 180) + 3.14 / 2]],
-        ["theta_E", "EPL Einstein Radius", [0.0, 2.0, 1.606]],
+        ["theta_E", "EPL Einstein Radius", [0.0, 2.0, 1.0]],
         ["t", "EPL Power Law Slope", [0.0, 2.0, 1.0]],
     ],
     "Shear": [
@@ -23,7 +23,7 @@ lens_slider_configs = {
         ],
     ],
     "Mass Sheet": [
-        ["kappa", "Mass Sheet Convergence", [0.0, 1.0, 0.5]],
+        ["kappa", "Mass Sheet Convergence", [0.0, 1.0, 0.1]],
     ],
     "NFW": [
         ["x0", "NFW X Position", [-2.0, 2.0, 0.0]],
@@ -34,7 +34,7 @@ lens_slider_configs = {
     "SIS": [
         ["x0", "SIS X Position", [-2.0, 2.0, 0.0]],
         ["y0", "SIS Y Position", [-2.0, 2.0, 0.25]],
-        ["theta_E", "SIS Einstein Radius", [0.0, 2.0, 1.606]],
+        ["theta_E", "SIS Einstein Radius", [0.0, 2.0, 1.0]],
     ],
     # "Pixelated Convergence": [
     #     ["x0", "Pix Conv X Position", [-2.0, 2.0, 0.0]],
@@ -43,7 +43,7 @@ lens_slider_configs = {
     "Point": [
         ["x0", "Point X Position", [-2.0, 2.0, 0.0]],
         ["y0", "Point Y Position", [-2.0, 2.0, 0.25]],
-        ["th_ein", "Point Einstein Radius", [0.0, 2.0, 1.606]],
+        ["th_ein", "Point Einstein Radius", [0.0, 2.0, 1.0]],
     ],
     "Pseudo-Jaffe": [
         ["x0", "P-Jaffe X Position", [-2.0, 2.0, 0.0]],
@@ -57,12 +57,12 @@ lens_slider_configs = {
         ["y0", "SIE Y Position", [-2.0, 2.0, 0.25]],
         ["q", "SIE Axis Ratio", [0.1, 1.0, 0.82]],
         ["phi", "SIE Rotation Angle", [0.0, 3.14, 8 * (3.14 / 180) + 3.14 / 2]],
-        ["b", "SIE Einstein Radius", [0.0, 2.0, 1.606]],
+        ["b", "SIE Einstein Radius", [0.0, 2.0, 1.0]],
     ],
     "TNFW": [
         ["x0", "TNFW X Position", [-2.0, 2.0, 0.0]],
         ["y0", "TNFW Y Position", [-2.0, 2.0, 0.25]],
-        ["m", "TNFW Mass with R200", [1e9, 1e11, 1e10]],
+        ["m", "TNFW Mass with R200", [1e12, 1e15, 1e13]],
         ["c", "TNFW Concentration", [5.0, 40.0, 2.0]],
     ],
 }
@@ -76,10 +76,7 @@ source_slider_configs = {
         ["n", "Sersic Index", [0.1, 10.0, 0.8]],
         ["Re", "Sersic Scale Length", [0.0, 2.0, 1.25]],
     ],
-    "Pixelated": [
-        ["x0", "Pix X Position", [-2.0, 2.0, 0.0]],
-        ["y0", "Pix Y Position", [-2.0, 2.0, -0.2 + 0.25]],
-    ],
+    "Pixelated": [],
 }
 
 name_map = {
