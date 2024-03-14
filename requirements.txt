@@ -1,5 +1,6 @@
 caustics
 plotly>=5.19
+scikit-image
 astropy>=5.2.1,<6.0.0
 graphviz==0.20.1
 h5py>=3.8.0
