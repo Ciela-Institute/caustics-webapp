@@ -11,4 +11,3 @@ safetensors>=0.4.1
 scipy>=1.8.0
 torch>=2.0.0
 st-theme
-
