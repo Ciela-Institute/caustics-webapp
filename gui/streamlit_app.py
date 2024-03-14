@@ -1,5 +1,9 @@
 import os
 import streamlit as st
+from plotly.subplots import make_subplots
+import plotly.express as px
+import plotly.graph_objects as go
+
 import matplotlib.pyplot as plt
 from matplotlib.cm import inferno
 import torch
@@ -167,63 +171,56 @@ else:
 
 # Plot the caustic trace and lensed image in the second column
 with col3:
-    st.header(r"$\textsf{\tiny Visualization}$", divider="blue")
+    st.header(r"$\textsf{\tiny Visualization}$")
     
     if caustic_trace:
         # Plot the unlensed image
-        fig2, ax2 = plt.subplots(figsize=(7, 7))
-        ax2.set_title("Unlensed source and caustic", fontsize=15)
         if source_menu == "Pixelated":
-            ax2.imshow(
-                np.stack(
-                    list(
-                        subsim(x_all, lens_source=False).detach().numpy()
-                        for subsim in minisim
-                    ),
-                    axis=2,
-                ),
+            imgs = np.stack(
+                [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim],
+                axis=2
             )
+            fig2 = px.imshow(imgs)
             if caustic_trace:
                 for c in range(len(y1s)):
-                    ax2.plot(y1s[c], y2s[c], "-w")
+                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white')))
         else:
-            ax2.imshow(
-                minisim(x_all, lens_source=False),
-                origin="lower",
-                cmap="inferno",
-            )
+            res = minisim(x_all, lens_source=False).numpy()
+            res = (res - np.min(res)) / (np.max(res) - np.min(res))
+            fig2 = px.imshow(res, color_continuous_scale = 'inferno', origin = "lower")
             if caustic_trace:
                 for c in range(len(y1s)):
-                    ax2.plot(y1s[c], y2s[c], "-w")
-        ax2.set_xticks(
-            ticks=np.linspace(0, simulation_size, 5).astype(int),
-            labels=np.round(
-                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-                3,
+                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white')))
+        fig2.update_layout(
+            width=400,  # Adjust as needed
+            xaxis=dict(
+                tickvals=np.linspace(0, simulation_size, 5),
+                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                title="Arcseconds from center",
             ),
-            fontsize=15,
+            yaxis=dict(
+                tickvals=np.linspace(0, simulation_size, 5)[1:],
+                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                title="Arcseconds from center"
+            ),
+            coloraxis_showscale=False, 
+            margin=dict(l=0, r=0, t=0, b=0),
+            showlegend = False,
+            coloraxis = dict(cmin = -0.12, cmax = 1)
         )
-        ax2.set_xlabel("Arcseconds from center", fontsize=15)
-        ax2.yaxis.set_label_position("right")
-        ax2.yaxis.tick_right()
-        ax2.set_yticks(
-            ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
-            labels=np.round(
-                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-                3,
-            )[1:],
-            fontsize=15,
-            rotation=90,
-        )
-        ax2.set_ylabel("Arcseconds from center", fontsize=15)
-        st.pyplot(fig2)
+        fig2.update_yaxes(
+            scaleanchor="x",
+            scaleratio=1,
+          )
+        
+        st.plotly_chart(fig2)
     else:
         # Plot the unlensed image
         if source_menu == "Pixelated":
             st.image(
                 np.stack(
-                    list(subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim),
-                    axis=2,
+                    [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim],
+                    axis=2
                 ),
                 caption="Unlensed image",
                 use_column_width="always",
@@ -240,59 +237,50 @@ with col3:
             )
     
     if critical_curve_trace:
-        fig1, ax1 = plt.subplots(figsize=(7, 7))
-        ax1.set_title("Lens and critical curve", fontsize=15)
         if source_menu == "Pixelated":
-            ax1.imshow(
-                np.stack(
-                    list(
-                        subsim(x_all, lens_source=True).detach().numpy()
-                        for subsim in minisim
-                    ),
-                    axis=2,
-                ),
+            imgs = np.stack(
+                [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim],
+                axis=2
             )
+            fig1 = px.imshow(imgs)
             if critical_curve_trace:
                 for c in range(len(x1s)):
-                    ax1.plot(x1s[c], x2s[c], "-w")
+                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white')))
         else:
-            ax1.imshow(
-                minisim(x_all, lens_source=True),
-                origin="lower",
-                cmap="inferno",
-            )
+            res = minisim(x_all, lens_source=True).numpy()
+            res = (res - np.min(res)) / (np.max(res) - np.min(res))
+            fig1 = px.imshow(res, color_continuous_scale = 'inferno', origin = "lower")
             if critical_curve_trace:
                 for c in range(len(x1s)):
-                    ax1.plot(x1s[c], x2s[c], "-w")
-        ax1.set_xticks(
-            ticks=np.linspace(0, simulation_size, 5).astype(int),
-            labels=np.round(
-                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-                3,
+                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white')))
+        fig1.update_layout(
+            width=400,  # Adjust as needed
+            xaxis=dict(
+                tickvals=np.linspace(0, simulation_size, 5),
+                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                title="Arcseconds from center",
             ),
-            fontsize=15,
+            yaxis=dict(
+                tickvals=np.linspace(0, simulation_size, 5)[1:],
+                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                title="Arcseconds from center"
+            ),
+            coloraxis_showscale=False, 
+            margin=dict(l=0, r=0, t=0, b=0),
+            showlegend = False,
+            coloraxis = dict(cmin = -0.12, cmax = 1)
         )
-        ax1.set_xlabel("Arcseconds from center", fontsize=15)
-        ax1.yaxis.set_label_position("right")
-        ax1.yaxis.tick_right()
-        ax1.set_yticks(
-            ticks=np.linspace(0, simulation_size, 5).astype(int)[1:],
-            labels=np.round(
-                np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5),
-                3,
-            )[1:],
-            fontsize=15,
-            rotation=90,
-        )
-        ax1.set_ylabel("Arcseconds from center", fontsize=15)
-        st.pyplot(fig1)
-        
+        fig1.update_yaxes(
+            scaleanchor="x",
+            scaleratio=1
+          )
+        st.plotly_chart(fig1)
     else:
         if source_menu == "Pixelated":
             st.image(
                 np.stack(
-                    list(subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim),
-                    axis=2,
+                    [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim],
+                    axis=2
                 ),
                 caption="Lensed image",
                 use_column_width="always",
@@ -307,3 +295,5 @@ with col3:
                 use_column_width="always",
                 clamp=True,
             )
+            
+    
