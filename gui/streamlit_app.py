@@ -1,4 +1,5 @@
 import os
+import matplotlib as plt
 import streamlit as st
 from plotly.subplots import make_subplots
 import plotly.express as px
