@@ -183,31 +183,47 @@ with col3:
             fig2 = px.imshow(imgs)
             if caustic_trace:
                 for c in range(len(y1s)):
-                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white')))
+                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+            fig2.update_layout(
+                width=400,  # Adjust as needed
+                xaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5),
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                    title="Arcseconds from center",
+                ),
+                yaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5)[1:],
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                    title="Arcseconds from center"
+                ),
+                margin=dict(l=0, r=0, t=0, b=0),
+                showlegend = False
+            )
         else:
+            fig2 = make_subplots()
             res = minisim(x_all, lens_source=False).numpy()
             res = (res - np.min(res)) / (np.max(res) - np.min(res))
-            fig2 = px.imshow(res, color_continuous_scale = 'inferno', origin = "lower")
+            fig2.add_heatmap(z=res, zmin=0, zmax=1, coloraxis='coloraxis', hoverinfo = "skip")
             if caustic_trace:
                 for c in range(len(y1s)):
-                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white')))
-        fig2.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
-            ),
-            coloraxis_showscale=False, 
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False,
-            coloraxis = dict(cmin = -0.12, cmax = 1)
-        )
+                    fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+            fig2.update_layout(
+                width=400,  # Adjust as needed
+                xaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5),
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                    title="Arcseconds from center",
+                ),
+                yaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5)[1:],
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                    title="Arcseconds from center"
+                ),
+                coloraxis_showscale=False, 
+                margin=dict(l=0, r=0, t=0, b=0),
+                showlegend = False,
+                coloraxis = dict(colorscale = "inferno", cmin = -0.12, cmax = 1)
+            )
         fig2.update_yaxes(
             scaleanchor="x",
             scaleratio=1,
@@ -245,31 +261,48 @@ with col3:
             fig1 = px.imshow(imgs)
             if critical_curve_trace:
                 for c in range(len(x1s)):
-                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white')))
+                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+                    
+            fig1.update_layout(
+                width=400,  # Adjust as needed
+                xaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5),
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                    title="Arcseconds from center",
+                ),
+                yaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5)[1:],
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                    title="Arcseconds from center"
+                ), 
+                margin=dict(l=0, r=0, t=0, b=0),
+                showlegend = False,
+            )
         else:
+            fig1 = make_subplots()
             res = minisim(x_all, lens_source=True).numpy()
             res = (res - np.min(res)) / (np.max(res) - np.min(res))
-            fig1 = px.imshow(res, color_continuous_scale = 'inferno', origin = "lower")
+            fig1.add_heatmap(z=res, zmin=0, zmax=1, coloraxis='coloraxis', hoverinfo = "skip")
             if critical_curve_trace:
                 for c in range(len(x1s)):
-                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white')))
-        fig1.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
-            ),
-            coloraxis_showscale=False, 
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False,
-            coloraxis = dict(cmin = -0.12, cmax = 1)
-        )
+                    fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+            fig1.update_layout(
+                width=400,  # Adjust as needed
+                xaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5),
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                    title="Arcseconds from center",
+                ),
+                yaxis=dict(
+                    tickvals=np.linspace(0, simulation_size, 5)[1:],
+                    ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
+                    title="Arcseconds from center"
+                ),
+                coloraxis_showscale=False, 
+                margin=dict(l=0, r=0, t=0, b=0),
+                showlegend = False,
+                coloraxis = dict(colorscale = "inferno", cmin = -0.12, cmax = 1)
+            )
         fig1.update_yaxes(
             scaleanchor="x",
             scaleratio=1
