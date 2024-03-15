@@ -19,9 +19,7 @@ from app_configs import (
 from skimage import measure
 
 
-def caustic_critical_line(
-    lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"
-):
+def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"):
     thx, thy = get_meshgrid(
         res / upsample_factor,
         upsample_factor * simulation_size,
@@ -30,13 +28,13 @@ def caustic_critical_line(
         device=device,
     )
     A = lens.jacobian_lens_equation(thx, thy, z_s, lens.pack(x))
-    
+
     # Compute A's determinant at every point
     detA = torch.linalg.det(A)
 
     # Generate caustic using skimage's find_contours
     contours = measure.find_contours(detA.cpu().numpy(), 0.0)
-    
+
     x1s = []
     x2s = []
     y1s = []
@@ -45,15 +43,21 @@ def caustic_critical_line(
         # Convert contour to device tensor
         contour = torch.tensor(contour, device=device)
         # Raytrace the points to the source plane
-        x1 = contour[:, 1]# * res / upsample_factor + simulation_size / 2
-        x2 = contour[:, 0]# * res / upsample_factor + simulation_size / 2
-        y1, y2 = lens.raytrace((x1 - simulation_size / 2) * res, (x2 - simulation_size / 2) * res, z_s, params=lens.pack(x))
+        x1 = contour[:, 1]  # * res / upsample_factor + simulation_size / 2
+        x2 = contour[:, 0]  # * res / upsample_factor + simulation_size / 2
+        y1, y2 = lens.raytrace(
+            (x1 - simulation_size / 2) * res,
+            (x2 - simulation_size / 2) * res,
+            z_s,
+            params=lens.pack(x),
+        )
         y1s.append(y1.cpu().numpy() / res + simulation_size / 2)
         y2s.append(y2.cpu().numpy() / res + simulation_size / 2)
         x1s.append(x1.cpu().numpy())
         x2s.append(x2.cpu().numpy())
 
     return x1s, x2s, y1s, y2s
+
 
 st.set_page_config(layout="wide")
 css = """
@@ -63,14 +67,12 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 theme = st_theme()
-if theme["base"] == "dark":
+if theme is None or theme["base"] == "dark":
     logo_url = (
-    "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo.png?raw=true"
+        "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo.png?raw=true"
     )
 else:
-    logo_url = (
-    "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo_white.png?raw=true"
-)
+    logo_url = "https://github.com/Ciela-Institute/caustics/raw/main/media/caustics_logo_white.png?raw=true"
 st.sidebar.image(logo_url)
 docs_url = "https://caustics.readthedocs.io/"
 st.sidebar.write("Check out the [documentation](%s)!" % docs_url)
@@ -79,8 +81,8 @@ lens_menu = st.sidebar.multiselect(
     "Select your Lens(es)", lens_slider_configs.keys(), default=["EPL", "Shear"]
 )
 source_menu = st.sidebar.radio("Select your Source (more to come)", source_slider_configs.keys())
-caustic_trace = st.sidebar.toggle("Trace the caustic", value = True)
-critical_curve_trace = st.sidebar.toggle("Trace the critical curve", value = True)
+caustic_trace = st.sidebar.toggle("Trace the caustic", value=True)
+critical_curve_trace = st.sidebar.toggle("Trace the critical curve", value=True)
 
 
 st.sidebar.write("Get it for yourself: pip install caustics")
@@ -103,7 +105,9 @@ with col1:
     for lens in lens_menu:
         for param, label, bounds in lens_slider_configs[lens]:
             x_lens.append(
-                st.slider(label, min_value=bounds[0], max_value=bounds[1], value=bounds[2], step = bounds[3])
+                st.slider(
+                    label, min_value=bounds[0], max_value=bounds[1], value=bounds[2], step=bounds[3]
+                )
             )
 
     x_lens = torch.tensor(x_lens)
@@ -130,7 +134,9 @@ with col2:
         x_source = []
         for param, label, bounds in source_slider_configs[source_menu]:
             x_source.append(
-                st.slider(label, min_value=bounds[0], max_value=bounds[1], value=bounds[2], step = bounds[3])
+                st.slider(
+                    label, min_value=bounds[0], max_value=bounds[1], value=bounds[2], step=bounds[3]
+                )
             )
         x_source = torch.tensor(x_source)
 x_all = torch.cat((x_lens, x_source))
@@ -181,115 +187,143 @@ with col3:
     # Plot the unlensed image
     if source_menu == "Pixelated":
         imgs = np.stack(
-            [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim],
-            axis=2
+            [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim], axis=2
         )
-        fig2 = px.imshow(imgs, binary_string = "True")
+        fig2 = px.imshow(np.clip(imgs, a_min=0, a_max=1), binary_string="True")
         if caustic_trace:
             for c in range(len(y1s)):
-                fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+                fig2.add_trace(
+                    go.Scatter(
+                        x=y1s[c], y=y2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
+                    )
+                )
         fig2.update_layout(
             width=400,  # Adjust as needed
             xaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
+                ),
                 title="Arcseconds from center",
             ),
             yaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
+                    3,
+                ),
+                title="Arcseconds from center",
             ),
             margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False
+            showlegend=False,
         )
     else:
         fig2 = make_subplots()
         res = minisim(x_all, lens_source=False).numpy()
         res = (res - np.min(res)) / (np.max(res) - np.min(res))
-        fig2.add_heatmap(z=res, zmin=0, zmax=1, coloraxis='coloraxis', hoverinfo = "skip")
+        fig2.add_heatmap(z=res, zmin=0, zmax=1, coloraxis="coloraxis", hoverinfo="skip")
         if caustic_trace:
             for c in range(len(y1s)):
-                fig2.add_trace(go.Scatter(x=y1s[c], y=y2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+                fig2.add_trace(
+                    go.Scatter(
+                        x=y1s[c], y=y2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
+                    )
+                )
         fig2.update_layout(
             width=400,  # Adjust as needed
             xaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
+                ),
                 title="Arcseconds from center",
             ),
             yaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
+                    3,
+                ),
+                title="Arcseconds from center",
             ),
-            coloraxis_showscale=False, 
+            coloraxis_showscale=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False,
-            coloraxis = dict(colorscale = "inferno", cmin = -0.12, cmax = 1)
+            showlegend=False,
+            coloraxis=dict(colorscale="inferno", cmin=-0.12, cmax=1),
         )
     fig2.update_yaxes(
         scaleanchor="x",
         scaleratio=1,
-      )
+    )
 
     st.plotly_chart(fig2)
-    
-    
+
     if source_menu == "Pixelated":
         imgs = np.stack(
-            [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim],
-            axis=2
+            [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim], axis=2
         )
-        fig1 = px.imshow(imgs, binary_string = "True")
+        fig1 = px.imshow(np.clip(imgs, a_min=0, a_max=1), binary_string="True")
         if critical_curve_trace:
             for c in range(len(x1s)):
-                fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+                fig1.add_trace(
+                    go.Scatter(
+                        x=x1s[c], y=x2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
+                    )
+                )
 
         fig1.update_layout(
             width=400,  # Adjust as needed
             xaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
+                ),
                 title="Arcseconds from center",
             ),
             yaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
-            ), 
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
+                    3,
+                ),
+                title="Arcseconds from center",
+            ),
             margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False,
+            showlegend=False,
         )
     else:
         fig1 = make_subplots()
         res = minisim(x_all, lens_source=True).numpy()
         res = (res - np.min(res)) / (np.max(res) - np.min(res))
-        fig1.add_heatmap(z=res, zmin=0, zmax=1, coloraxis='coloraxis', hoverinfo = "skip")
+        fig1.add_heatmap(z=res, zmin=0, zmax=1, coloraxis="coloraxis", hoverinfo="skip")
         if critical_curve_trace:
             for c in range(len(x1s)):
-                fig1.add_trace(go.Scatter(x=x1s[c], y=x2s[c], mode='lines', line=dict(color='white'), hoverinfo = "skip"))
+                fig1.add_trace(
+                    go.Scatter(
+                        x=x1s[c], y=x2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
+                    )
+                )
         fig1.update_layout(
             width=400,  # Adjust as needed
             xaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3),
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
+                ),
                 title="Arcseconds from center",
             ),
             yaxis=dict(
                 tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:], 3),
-                title="Arcseconds from center"
+                ticktext=np.round(
+                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
+                    3,
+                ),
+                title="Arcseconds from center",
             ),
-            coloraxis_showscale=False, 
+            coloraxis_showscale=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            showlegend = False,
-            coloraxis = dict(colorscale = "inferno", cmin = -0.12, cmax = 1)
+            showlegend=False,
+            coloraxis=dict(colorscale="inferno", cmin=-0.12, cmax=1),
         )
-    fig1.update_yaxes(
-        scaleanchor="x",
-        scaleratio=1
-      )
+    fig1.update_yaxes(scaleanchor="x", scaleratio=1)
     st.plotly_chart(fig1)
-            
-    
