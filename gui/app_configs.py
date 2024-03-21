@@ -12,14 +12,14 @@ lens_slider_configs = {
     ],
     "Shear": [
         [
-            "gamma1",
-            "Shear First Component",
-            [-1.0, 1.0, 0.036 * np.cos(2 * 3 * (np.pi / 180)), 0.05],
+            "gamma",
+            "Shear Magnitude",
+            [0., 1.0, 0., 0.05],
         ],
         [
-            "gamma2",
-            "Shear Second Component",
-            [-1.0, 1.0, 0.036 * np.sin(2 * 3 * (np.pi / 180)), 0.05],
+            "theta",
+            "Shear Rotation Angle",
+            [0., np.pi, 0., 0.05],
         ],
     ],
     "Mass Sheet": [
@@ -81,7 +81,7 @@ source_slider_configs = {
 
 name_map = {
     "EPL": caustics.EPL,
-    "Shear": caustics.ExternalShear,
+    "Shear": caustics.ExternalShear_angle,
     "Mass Sheet": caustics.MassSheet,
     "NFW": caustics.NFW,
     "SIS": caustics.SIS,
