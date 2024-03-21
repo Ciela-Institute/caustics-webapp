@@ -189,7 +189,7 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim], axis=2
         )
-        fig2 = px.imshow(np.clip(imgs, a_min=0, a_max=1), binary_string="True")
+        fig2 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis = 0), binary_string="True", origin = "lower")
         if caustic_trace:
             for c in range(len(y1s)):
                 fig2.add_trace(
@@ -262,7 +262,7 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim], axis=2
         )
-        fig1 = px.imshow(np.clip(imgs, a_min=0, a_max=1), binary_string="True")
+        fig1 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin = "lower")
         if critical_curve_trace:
             for c in range(len(x1s)):
                 fig1.add_trace(
