@@ -8,7 +8,7 @@ from streamlit_theme import st_theme
 import torch
 import numpy as np
 import caustics
-from caustics.utils import get_meshgrid
+from caustics.utils import meshgrid
 from app_configs import (
     lens_slider_configs,
     source_slider_configs,
@@ -20,7 +20,7 @@ from skimage import measure
 
 
 def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"):
-    thx, thy = get_meshgrid(
+    thx, thy = meshgrid(
         res / upsample_factor,
         upsample_factor * simulation_size,
         upsample_factor * simulation_size,
@@ -158,7 +158,7 @@ if source_menu == "Pixelated":
         for img in source_img
     )
     minisim = list(
-        caustics.Lens_Source(
+        caustics.LensSource(
             lens=lens,
             source=subsrc,
             pixelscale=deltam,
@@ -172,7 +172,7 @@ if source_menu == "Pixelated":
     )
 else:
     src = name_map[source_menu](name="src", **default_params[source_menu])
-    minisim = caustics.Lens_Source(
+    minisim = caustics.LensSource(
         lens=lens, source=src, pixelscale=deltam, pixels_x=simulation_size, z_s=z_source
     )
     x1s, x2s, y1s, y2s = caustic_critical_line(
@@ -327,3 +327,4 @@ with col3:
         )
     fig1.update_yaxes(scaleanchor="x", scaleratio=1)
     st.plotly_chart(fig1)
+
