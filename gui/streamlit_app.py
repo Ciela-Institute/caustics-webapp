@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+from matplotlib.cm import inferno
 import streamlit as st
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -17,6 +18,7 @@ from app_configs import (
 )
 
 from skimage import measure
+from streamlit_image_comparison import image_comparison
 
 
 def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"):
@@ -186,145 +188,26 @@ with col3:
 
     # Plot the unlensed image
     if source_menu == "Pixelated":
-        imgs = np.stack(
+        imgs_source = np.stack(
             [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim], axis=2
         )
-        fig2 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis = 0), binary_string="True", origin = "lower")
-        if caustic_trace:
-            for c in range(len(y1s)):
-                fig2.add_trace(
-                    go.Scatter(
-                        x=y1s[c], y=y2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
-                    )
-                )
-        fig2.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
-                ),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
-                    3,
-                ),
-                title="Arcseconds from center",
-            ),
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-        )
-    else:
-        fig2 = make_subplots()
-        res = minisim(x_all, lens_source=False).numpy()
-        res = (res - np.min(res)) / (np.max(res) - np.min(res))
-        fig2.add_heatmap(z=res, zmin=0, zmax=1, coloraxis="coloraxis", hoverinfo="skip")
-        if caustic_trace:
-            for c in range(len(y1s)):
-                fig2.add_trace(
-                    go.Scatter(
-                        x=y1s[c], y=y2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
-                    )
-                )
-        fig2.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
-                ),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
-                    3,
-                ),
-                title="Arcseconds from center",
-            ),
-            coloraxis_showscale=False,
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-            coloraxis=dict(colorscale="inferno", cmin=-0.12, cmax=1),
-        )
-    fig2.update_yaxes(
-        scaleanchor="x",
-        scaleratio=1,
-    )
-
-    st.plotly_chart(fig2)
-
-    if source_menu == "Pixelated":
-        imgs = np.stack(
+        imgs_lensed = np.stack(
             [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim], axis=2
         )
-        fig1 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin = "lower")
-        if critical_curve_trace:
-            for c in range(len(x1s)):
-                fig1.add_trace(
-                    go.Scatter(
-                        x=x1s[c], y=x2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
-                    )
-                )
-
-        fig1.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
-                ),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
-                    3,
-                ),
-                title="Arcseconds from center",
-            ),
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
+        image_comparison(
+            img1=(imgs_source * 255).astype(np.uint8),
+            img2=(imgs_lensed * 255).astype(np.uint8),
+            label1="Source",
+            label2="Lensed",
         )
     else:
-        fig1 = make_subplots()
-        res = minisim(x_all, lens_source=True).numpy()
-        res = (res - np.min(res)) / (np.max(res) - np.min(res))
-        fig1.add_heatmap(z=res, zmin=0, zmax=1, coloraxis="coloraxis", hoverinfo="skip")
-        if critical_curve_trace:
-            for c in range(len(x1s)):
-                fig1.add_trace(
-                    go.Scatter(
-                        x=x1s[c], y=x2s[c], mode="lines", line=dict(color="white"), hoverinfo="skip"
-                    )
-                )
-        fig1.update_layout(
-            width=400,  # Adjust as needed
-            xaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5),
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5), 3
-                ),
-                title="Arcseconds from center",
-            ),
-            yaxis=dict(
-                tickvals=np.linspace(0, simulation_size, 5)[1:],
-                ticktext=np.round(
-                    np.linspace(-simulation_size * deltam / 2, simulation_size * deltam / 2, 5)[1:],
-                    3,
-                ),
-                title="Arcseconds from center",
-            ),
-            coloraxis_showscale=False,
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-            coloraxis=dict(colorscale="inferno", cmin=-0.12, cmax=1),
+        res_source = minisim(x_all, lens_source=False).numpy()
+        res_source = (res_source - np.min(res_source)) / (np.max(res_source) - np.min(res_source))
+        res_lensed = minisim(x_all, lens_source=True).numpy()
+        res_lensed = (res_lensed - np.min(res_lensed)) / (np.max(res_lensed) - np.min(res_lensed))
+        image_comparison(
+            img1=(inferno(res_source) * 255).astype(np.uint8),
+            img2=(inferno(res_lensed) * 255).astype(np.uint8),
+            label1="Source",
+            label2="Lensed",
         )
-    fig1.update_yaxes(scaleanchor="x", scaleratio=1)
-    st.plotly_chart(fig1)
-
