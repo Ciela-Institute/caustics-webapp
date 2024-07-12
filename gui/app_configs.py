@@ -94,6 +94,20 @@ name_map = {
     "Pixelated": caustics.Pixelated,
 }
 
+name_to_class = {
+    "EPL": "EPL",
+    "Shear": "ExternalShear",
+    "Mass Sheet": "MassSheet",
+    "NFW": "NFW",
+    "SIS": "SIS",
+    "Point": "Point",
+    "Pseudo-Jaffe": "PseudoJaffe",
+    "SIE": "SIE",
+    "TNFW": "TNFW",
+    "Sersic": "Sersic",
+    "Pixelated": "Pixelated",
+}
+
 default_params = {
     "EPL": {},
     "Shear": {"x0": 0.0, "y0": 0.0},
