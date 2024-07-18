@@ -14,7 +14,9 @@ from app_configs import (
     source_slider_configs,
     name_map,
     default_params,
+    name_to_class,
 )
+from yaml_components import base_yaml, lens_yaml
 
 from skimage import measure
 
@@ -97,6 +99,8 @@ deltam = fov / simulation_size
 # Create a two-column layout
 col1, col2, col3 = st.columns([4, 4, 5])
 
+yaml_args = {"sourcename": name_to_class[source_menu], "sourceparams": "", "sourcekwargs": ""}
+
 # Sliders for lens parameters in the first column
 with col1:
     st.header(r"$\textsf{\tiny Lens Parameters}$", divider="blue")
@@ -144,9 +148,31 @@ z_lens = 1.0
 z_source = 2.0
 cosmology = caustics.FlatLambdaCDM(name="cosmo")
 lenses = []
+yaml_args["lenses"] = ""
+lensnames = ""
+ip = 0
 for lens in lens_menu:
     lenses.append(name_map[lens](cosmology, **default_params[lens], z_l=z_lens))
+    lensparams = ""
+    for param in default_params[lens]:
+        lensparams = lensparams + f"    {param}: {default_params[lens][param]}\n"
+    for param in lenses[-1].dynamic:
+        lensparams = lensparams + f"    {param}: {x_lens[ip]}\n"
+        ip += 1
+    yaml_args["lenses"] = yaml_args["lenses"] + lens_yaml.format(
+        lensname=lenses[-1].name, lenskind=name_to_class[lens], lensparams=lensparams
+    )
+    lensnames = lensnames + f"      - *{lenses[-1].name}\n"
+yaml_args["lenslist"] = lensnames
 lens = caustics.SinglePlane(lenses=lenses, cosmology=cosmology, z_l=z_lens)
+
+yaml_args["pixelscale"] = deltam
+yaml_args["numpixels"] = simulation_size
+for param in default_params[source_menu]:
+    yaml_args["sourceparams"] = (
+        yaml_args["sourceparams"] + f"    {param}: {default_params[source_menu][param]}\n"
+    )
+
 if source_menu == "Pixelated":
     src = list(
         name_map[source_menu](
@@ -157,6 +183,7 @@ if source_menu == "Pixelated":
         )
         for img in source_img
     )
+    yaml_args["sourceparams"] = f"    pixelscale: {src_pixelscale * fov_scale}\n"
     minisim = list(
         caustics.LensSource(
             lens=lens,
@@ -178,6 +205,10 @@ else:
     x1s, x2s, y1s, y2s = caustic_critical_line(
         lens=lens, x=x_lens, z_s=z_source, res=deltam, simulation_size=simulation_size
     )
+    for i, param in enumerate(src.dynamic):
+        yaml_args["sourceparams"] = (
+            yaml_args["sourceparams"] + f"    {param}: {x_source[i].item()}\n"
+        )
 
 
 # Plot the caustic trace and lensed image in the second column
@@ -189,7 +220,9 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim], axis=2
         )
-        fig2 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis = 0), binary_string="True", origin = "lower")
+        fig2 = px.imshow(
+            np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin="lower"
+        )
         if caustic_trace:
             for c in range(len(y1s)):
                 fig2.add_trace(
@@ -262,7 +295,9 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim], axis=2
         )
-        fig1 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin = "lower")
+        fig1 = px.imshow(
+            np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin="lower"
+        )
         if critical_curve_trace:
             for c in range(len(x1s)):
                 fig1.add_trace(
@@ -328,3 +363,13 @@ with col3:
     fig1.update_yaxes(scaleanchor="x", scaleratio=1)
     st.plotly_chart(fig1)
 
+if yaml_args["sourceparams"] != "":
+    yaml_args["sourceparams"] = "  params:\n" + yaml_args["sourceparams"]
+if yaml_args["sourcekwargs"] != "":
+    yaml_args["sourcekwargs"] = "  init_kwargs:\n" + yaml_args["sourcekwargs"]
+st.sidebar.download_button(
+    "Download Your Simulator",
+    base_yaml.format(**yaml_args),
+    file_name="simulator.yaml",
+    help="click here to download a yaml version of you simulator",
+)
