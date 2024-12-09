@@ -27,7 +27,7 @@ def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1,
         dtype=torch.float32,
         device=device,
     )
-    A = lens.jacobian_lens_equation(thx, thy, z_s, lens.pack(x))
+    A = lens.jacobian_lens_equation(thx, thy, z_s, x)
 
     # Compute A's determinant at every point
     detA = torch.linalg.det(A)
@@ -49,7 +49,7 @@ def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1,
             (x1 - simulation_size / 2) * res,
             (x2 - simulation_size / 2) * res,
             z_s,
-            params=lens.pack(x),
+            params=x,
         )
         y1s.append(y1.cpu().numpy() / res + simulation_size / 2)
         y2s.append(y2.cpu().numpy() / res + simulation_size / 2)
@@ -189,7 +189,9 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=False).detach().numpy() for subsim in minisim], axis=2
         )
-        fig2 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis = 0), binary_string="True", origin = "lower")
+        fig2 = px.imshow(
+            np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin="lower"
+        )
         if caustic_trace:
             for c in range(len(y1s)):
                 fig2.add_trace(
@@ -262,7 +264,9 @@ with col3:
         imgs = np.stack(
             [subsim(x_all, lens_source=True).detach().numpy() for subsim in minisim], axis=2
         )
-        fig1 = px.imshow(np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin = "lower")
+        fig1 = px.imshow(
+            np.flip(np.clip(imgs, a_min=0, a_max=1), axis=0), binary_string="True", origin="lower"
+        )
         if critical_curve_trace:
             for c in range(len(x1s)):
                 fig1.add_trace(
@@ -327,4 +331,3 @@ with col3:
         )
     fig1.update_yaxes(scaleanchor="x", scaleratio=1)
     st.plotly_chart(fig1)
-
