@@ -19,7 +19,7 @@ from app_configs import (
 from skimage import measure
 
 
-def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1, device="cpu"):
+def caustic_critical_line(lens, x, res, simulation_size, upsample_factor=1, device="cpu"):
     thx, thy = meshgrid(
         res / upsample_factor,
         upsample_factor * simulation_size,
@@ -27,7 +27,7 @@ def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1,
         dtype=torch.float32,
         device=device,
     )
-    A = lens.jacobian_lens_equation(thx, thy, z_s, x)
+    A = lens.jacobian_lens_equation(thx, thy, x)
 
     # Compute A's determinant at every point
     detA = torch.linalg.det(A)
@@ -48,7 +48,6 @@ def caustic_critical_line(lens, x, z_s, res, simulation_size, upsample_factor=1,
         y1, y2 = lens.raytrace(
             (x1 - simulation_size / 2) * res,
             (x2 - simulation_size / 2) * res,
-            z_s,
             params=x,
         )
         y1s.append(y1.cpu().numpy() / res + simulation_size / 2)
@@ -145,8 +144,8 @@ z_source = 2.0
 cosmology = caustics.FlatLambdaCDM(name="cosmo")
 lenses = []
 for lens in lens_menu:
-    lenses.append(name_map[lens](cosmology, **default_params[lens], z_l=z_lens))
-lens = caustics.SinglePlane(lenses=lenses, cosmology=cosmology, z_l=z_lens)
+    lenses.append(name_map[lens](cosmology, **default_params[lens]))
+lens = caustics.SinglePlane(lenses=lenses, cosmology=cosmology, z_l=z_lens, z_s=z_source)
 if source_menu == "Pixelated":
     src = list(
         name_map[source_menu](
@@ -163,20 +162,19 @@ if source_menu == "Pixelated":
             source=subsrc,
             pixelscale=deltam,
             pixels_x=simulation_size,
-            z_s=z_source,
         )
         for subsrc in src
     )
     x1s, x2s, y1s, y2s = caustic_critical_line(
-        lens=lens, x=x_lens, z_s=z_source, res=deltam, simulation_size=simulation_size
+        lens=lens, x=x_lens, res=deltam, simulation_size=simulation_size
     )
 else:
     src = name_map[source_menu](name="src", **default_params[source_menu])
     minisim = caustics.LensSource(
-        lens=lens, source=src, pixelscale=deltam, pixels_x=simulation_size, z_s=z_source
+        lens=lens, source=src, pixelscale=deltam, pixels_x=simulation_size
     )
     x1s, x2s, y1s, y2s = caustic_critical_line(
-        lens=lens, x=x_lens, z_s=z_source, res=deltam, simulation_size=simulation_size
+        lens=lens, x=x_lens, res=deltam, simulation_size=simulation_size
     )
 
 
